@@ -1,0 +1,9 @@
+---
+layout: post
+title:  "Hello World!"
+date:   2018-07-22 00:29:45 +0900
+categories: jekyll update
+---
+{% highlight cpp %}
+std::cout << "Hello world!";
+{% endhighlight %}
