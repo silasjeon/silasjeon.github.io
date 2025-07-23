@@ -176,8 +176,15 @@
             <p>
                 I developed an idea to address a common challenge known as “Context Engineering” in working with LLMs. The context window—the whole text given to the LLM with prompts—is important for LLMs to work well. Poorly managed contexts can lead to incorrect or irrelevant outputs. For example, if you need multiple turns to get the final answer from the LLM by giving required information incrementally (answering and guiding the LLM), it can perform worse than when you give all the information at once and ask the question. This is because the LLM refers to the previous premature answers when it responds later. But it is natural for users to ask and counsel with LLMs incrementally, as in the multi-turn chatbot interface. It requires knowledge and effort for users to consciously edit and delete the previous prompts and select useful outputs from the LLM.
             </p>
-
             
+            <p>
+                To explore an alternative, I built a prototype that avoids the linear conversation model and instead gives users explicit control over what context is included at each step. In this interface, there is no conversation history, but there are multiple texts shown as cards serving as context. When the user sends a prompt, the cards can be either included as context or not, based on the user's selection. The user can add the LLM's response as a new card or just discard it. Texts in the cards can be edited at any time.
+            </p>
+
+            <p>
+                Here's a demonstration of how this card-based interface works in practice:
+            </p>
+
             <div style="margin: 32px 0;">
                 <!-- Video placeholder -->
                 <video width="100%" controls>
@@ -186,9 +193,8 @@
                 </video>
             </div>
 
-
             <p>
-                To explore an alternative, I built a prototype that avoids the linear conversation model and instead gives users explicit control over what context is included at each step. In this interface, there is no conversation history, but there are multiple texts shown as cards serving as context. When the user sends a prompt, the cards can be either included as context or not, based on the user’s selection. The user can add the LLM’s response as a new card or just discard it. Texts in the cards can be edited at any time.
+                You can <a href="https://card-ui-prototype.pages.dev/" target="_blank">try the prototype here</a>. You will need to provide your own API key. The key is stored locally in your browser and is only used to make calls directly to the LLM provider's API. No other data is collected or sent elsewhere.
             </p>
 
             <p>
