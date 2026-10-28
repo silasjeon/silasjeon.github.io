@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A.X 뉴런 실험</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* A.X-only page. Layout follows Neuron Persona Library: hero carousel, dark per-layer atlas, searchable library. */
+:root {
+  --bg: #fbfbfa; --panel: #f2f3f5; --line: #dcdee3; --ink: #15171c; --ink2: #50545e; --ink3: #7c808a;
+  --accent: #eb6834; --link: #2a78d6;
+  --c-default_assistant: #b4b6bc; --c-altered_assistant: #6250d6; --c-persona: #d98f00; --c-other: #c93d9a; --c-incoherent: #8d7a55;
+  --sans: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --serif: "Noto Serif KR", Georgia, serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15161a; --panel: #1e2026; --line: #33363e; --ink: #eceef2; --ink2: #b3b7c0; --ink3: #858a95;
+  --accent: #f07a48; --link: #5a9de8;
+  --c-default_assistant: #4a4d55; --c-altered_assistant: #9085e9; --c-persona: #f0a417; --c-other: #e44fb5; --c-incoherent: #8d7a55; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15161a; --panel: #1e2026; --line: #33363e; --ink: #eceef2; --ink2: #b3b7c0; --ink3: #858a95;
+  --accent: #f07a48; --link: #5a9de8;
+  --c-default_assistant: #4a4d55; --c-altered_assistant: #9085e9; --c-persona: #f0a417; --c-other: #e44fb5; --c-incoherent: #8d7a55; color-scheme: dark }
+html { scroll-behavior: smooth; scroll-padding-top: 56px; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.65 var(--sans); word-break: keep-all; overflow-wrap: break-word; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h2 { font-size: clamp(28px, 4.6vw, 40px); letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 12px; text-wrap: balance; }
+h3 { font-size: 17px; margin: 0 0 6px; }
+p { color: var(--ink2); max-width: 64ch; margin: 0 0 12px; }
+a { color: var(--link); }
+.mono { font-family: var(--mono); }
+.serif { font-family: var(--serif); }
+.nw { white-space: nowrap; }
+section { padding-block: 72px 24px; }
+button { font: 14px var(--sans); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+select, input[type=search] { font: 14px var(--sans); padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); min-width: 0; }
+.seg { display: inline-flex; background: var(--panel); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 6px 12px; font-size: 13px; color: var(--ink2); }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.15); font-weight: 600; }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; line-height: 1.5; padding: 7px 10px; border-radius: 7px; z-index: 30; max-width: 300px; font-variant-numeric: tabular-nums; }
+/* top bar */
+.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.top-in { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 10px; }
+.brand { font-weight: 600; font-size: 14px; color: var(--ink); text-decoration: none; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.brand i { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.top nav { display: flex; gap: 16px; font-size: 13px; overflow-x: auto; }
+.top nav a { color: var(--ink2); text-decoration: none; white-space: nowrap; }
+/* hero */
+.hero { text-align: center; padding-block: 68px 56px; }
+.hero h1 { font-size: clamp(32px, 6.2vw, 56px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.14; margin: 0 auto 18px; max-width: 15em; text-wrap: balance; }
+.hero .lede { margin: 0 auto; font-size: clamp(15px, 2.2vw, 18px); max-width: 38em; }
+.hero .lede b { color: var(--ink); }
+.cta { display: flex; justify-content: center; align-items: center; gap: 18px; margin: 26px 0 36px; flex-wrap: wrap; }
+.btn { display: inline-block; padding: 10px 20px; border-radius: 999px; text-decoration: none; font-weight: 500; font-size: 15px; background: var(--link); color: #fff; }
+.lnk { text-decoration: none; font-size: 15px; }
+.hc { max-width: 600px; margin: 0 auto; text-align: left; background: var(--panel); border-radius: 22px; padding: 22px 22px 16px; min-height: 250px; display: grid; align-content: start; gap: 12px; }
+.bubble { border-radius: 18px; padding: 9px 14px; font-size: 14.5px; line-height: 1.6; overflow-wrap: anywhere; }
+.bubble i { color: var(--ink3); font-style: normal; }
+.bubble.user { justify-self: end; background: var(--link); color: #fff; border-bottom-right-radius: 4px; }
+.bubble.bot { justify-self: start; background: var(--bg); border-bottom-left-radius: 4px; max-width: 92%; }
+.hc-meta { font: 11px var(--mono); color: var(--ink3); margin-bottom: -6px; }
+.hc-ft { display: flex; align-items: baseline; gap: 12px; border-top: 1px solid var(--line); padding-top: 12px; margin-top: auto; flex-wrap: wrap; }
+.hc-ft .serif { font-size: 21px; font-weight: 500; }
+.hc-ft .sp { flex: 1; }
+.hc-ft .mono { font-size: 11px; color: var(--ink3); }
+.hc-ft a { text-decoration: none; font-size: 13px; }
+.hc-nav { display: flex; justify-content: center; align-items: center; gap: 14px; margin-top: 14px; }
+.hc-nav > button { width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 20px; line-height: 1; background: var(--panel); }
+.dots { display: flex; justify-content: center; gap: 7px; }
+.dots button { width: 8px; height: 8px; padding: 0; border-radius: 50%; border: 0; background: var(--line); }
+.dots button[aria-current="true"] { background: var(--ink2); }
+.fade { animation: fade .35s ease; } @keyframes fade { from { opacity: 0; transform: translateY(4px) } }
+/* atlas band: always dark */
+.band { background: #000; color: #eceef2; padding-block: 72px 64px;
+  --bg: #000; --panel: #16171b; --line: #2c2e35; --ink: #eceef2; --ink2: #b3b7c0; --ink3: #858a95; --link: #5a9de8;
+  --c-default_assistant: #34363d; --c-altered_assistant: #6f8cff; --c-persona: #f0a417; --c-other: #e44fb5; --c-incoherent: #6e5f40; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 22px; }
+.chips button { border-radius: 999px; font-size: 12.5px; padding: 6px 12px; display: flex; gap: 7px; align-items: center; }
+.chips button i { width: 9px; height: 9px; border-radius: 50%; }
+.chips button span { font: 11px var(--mono); color: var(--ink3); }
+.chips button[aria-pressed="true"] { border-color: var(--ink); }
+.atlas { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 18px 14px; }
+.al-h { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--ink2); margin-bottom: 5px; font-variant-numeric: tabular-nums; }
+.al-h span { color: var(--c-persona); }
+.atlas canvas { display: block; width: 100%; aspect-ratio: 1; cursor: pointer; }
+.bylayer { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; gap: 24px; align-items: end; margin-top: 48px; }
+@media (max-width: 640px) { .bylayer { grid-template-columns: 1fr; } }
+.bylayer p { font-size: 13px; margin: 0; }
+#bl svg { width: 100%; height: auto; display: block; }
+#bl rect.hit { cursor: pointer; }
+/* viewer */
+.viewer { border: 1px solid var(--line); border-radius: 16px; padding: 18px; background: var(--panel); }
+.v-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.v-ord { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--ink2); }
+.v-nav { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 16px; }
+.v-nav button { width: 44px; height: 44px; padding: 0; border-radius: 50%; font-size: 24px; line-height: 1; background: var(--bg); }
+.v-nav button:disabled { opacity: .35; cursor: default; }
+.v-mid { text-align: center; min-width: 0; }
+.v-mid b { font: 600 22px var(--mono); letter-spacing: -0.01em; }
+#v-pos { font: 12px var(--mono); color: var(--ink3); margin-top: 2px; }
+.v-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+@media (max-width: 680px) { .v-cols { grid-template-columns: 1fr; } }
+.v-side { background: var(--bg); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; border: 2px solid transparent; }
+.v-side.on { border-color: var(--ink3); }
+.v-side .dir { font-size: 13px; color: var(--ink2); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.v-side .nm { font: 500 22px/1.3 var(--serif); }
+.v-side .ds { font-size: 12.5px; color: var(--ink3); }
+.v-side .t { font-size: 14.5px; overflow-wrap: anywhere; }
+.v-side .t i { color: var(--ink3); font-style: normal; }
+.v-side .ft { font: 11px var(--mono); color: var(--ink3); }
+.chip { font-size: 11px; padding: 1px 8px; border-radius: 999px; color: #fff; }
+.chip.default_assistant { color: var(--ink); }
+/* library */
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-top: 14px; }
+.controls label { display: grid; gap: 4px; font-size: 12px; color: var(--ink2); }
+.filt { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; background: var(--panel); border-radius: 999px; padding: 4px 6px 4px 12px; }
+.filt button { padding: 0 8px; border: 0; background: transparent; font-size: 15px; line-height: 1; }
+.count { font-size: 13px; color: var(--ink3); margin: 14px 0 10px; }
+.lib { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.card { text-align: left; display: grid; gap: 6px; align-content: start; padding: 14px 16px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); min-width: 0; font-size: 13.5px; transition: border-color .12s, transform .12s; }
+.card:hover { border-color: var(--ink3); transform: translateY(-1px); }
+.card .hd { display: flex; justify-content: space-between; gap: 8px; font: 11px var(--mono); color: var(--ink3); }
+.card .hd b { font-weight: 500; }
+.card .nm { font: 500 20px/1.3 var(--serif); overflow-wrap: anywhere; }
+.card .t { color: var(--ink2); overflow-wrap: anywhere; }
+.card .t i { color: var(--ink3); font-style: normal; }
+.card .ft { font: 11px var(--mono); color: var(--ink3); }
+ul.notes { color: var(--ink2); max-width: 72ch; padding-left: 18px; }
+ul.notes li { margin-bottom: 6px; }
+code { font: .9em var(--mono); }
+@media (prefers-reduced-motion: reduce) { .fade { animation: none } .card { transition: none } }
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap top-in"><a href="#top" class="brand"><i></i>A.X 뉴런 실험</a><nav><a href="../">홈</a><a href="#atlas">지도</a><a href="#viewer">뉴런 보기</a><a href="#library">답 모음</a><a href="#method">실험 방법</a></nav></div></header>
+
+<section class="hero wrap" id="top">
+  <h1>뉴런 하나를 조작했을 때 <span class="nw">A.X 4.0 Light</span>가 한 자기소개</h1>
+  <p class="lede" id="lede"></p>
+  <div class="cta"><a class="btn" href="#viewer">뉴런 하나씩 보기</a><a class="lnk" href="#atlas">뉴런 지도 보기 ›</a></div>
+  <div class="hc" id="hc" aria-live="polite"></div>
+  <div class="hc-nav"><button type="button" id="hc-prev" aria-label="이전 예시">‹</button><div class="dots" id="hc-dots" aria-label="예시"></div><button type="button" id="hc-next" aria-label="다음 예시">›</button></div>
+</section>
+
+<section class="band" id="atlas"><div class="wrap">
+  <h2>뉴런 지도</h2>
+  <p>네모 하나가 층 하나이고, 점 하나가 뉴런 하나입니다. 점의 색은 그 뉴런을 조작했을 때 나온 답의 종류입니다. 점에 마우스를 올리면 답을 미리 볼 수 있고, 누르면 아래 '뉴런 하나씩 보기'에서 열립니다. 종류 버튼을 누르면 그 종류만 남습니다.</p>
+  <div class="seg" id="m-sign" aria-label="조작"><button type="button" data-v="1" aria-pressed="true">증폭했을 때</button><button type="button" data-v="-1" aria-pressed="false">억제했을 때</button></div>
+  <div class="chips" id="chips"></div>
+  <div class="atlas" id="atlas-grid"></div>
+  <div class="bylayer"><div><h3>층별</h3><p id="bl-cap"></p></div><div id="bl"></div></div>
+</div></section>
+
+<section class="wrap" id="viewer">
+  <h2>뉴런 하나씩 보기</h2>
+  <p>같은 뉴런을 증폭했을 때와 억제했을 때 A.X가 한 대답을 나란히 보여 줍니다. 종류와 순서를 고른 뒤 이전·다음 버튼이나 키보드 ←·→로 넘겨 보세요.</p>
+  <div class="viewer">
+    <div class="v-bar">
+      <div class="seg" id="v-cat" aria-label="답 종류"></div>
+      <label class="v-ord">순서 <select id="v-ord"><option value="w">엉뚱한 순</option><option value="wc">엉뚱하면서 자연스러운 순</option><option value="c">문장이 자연스러운 순</option><option value="L">층 순서</option><option value="r">무작위</option></select></label>
+    </div>
+    <div class="v-nav">
+      <button type="button" id="v-prev" aria-label="이전">‹</button>
+      <div class="v-mid"><div id="v-id"></div><div id="v-pos"></div></div>
+      <button type="button" id="v-next" aria-label="다음">›</button>
+    </div>
+    <div class="v-cols" id="v-cols"></div>
+  </div>
+</section>
+
+<section class="wrap" id="library">
+  <h2>답 모음</h2>
+  <p id="lib-lede"></p>
+  <div class="controls">
+    <div class="seg" id="f-cat" aria-label="답 종류"></div>
+    <div class="seg" id="f-dir" aria-label="조작"><button type="button" data-v="" aria-pressed="true">전체</button><button type="button" data-v="1" aria-pressed="false">증폭</button><button type="button" data-v="-1" aria-pressed="false">억제</button></div>
+    <label for="f-s">검색<input type="search" id="f-s" placeholder="교사, 식물, 대통령, 12층…"></label>
+    <label for="f-o">순서<select id="f-o"><option value="w">엉뚱한 순</option><option value="wc">엉뚱하면서 자연스러운 순</option><option value="c">문장이 자연스러운 순</option><option value="L">층 순서</option></select></label>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="lib" id="lib"></div>
+  <p style="margin-top:14px"><button id="more" type="button">더 보기</button></p>
+</section>
+
+<section class="wrap" id="method" style="padding-bottom:80px">
+  <h2>실험 방법</h2>
+  <ul class="notes">
+    <li>대상 모델은 SK텔레콤의 <a href="https://huggingface.co/skt/A.X-4.0-Light" target="_blank" rel="noopener">A.X 4.0 Light</a>입니다. Qwen2.5-7B에 한국어를 더 학습시킨 모델로, 28개 층에 층마다 MLP 뉴런이 18,944개 있습니다. M1 Max 맥북에서 MLX로 돌렸습니다.</li>
+    <li>질문은 "너는 누구야?" 하나입니다. 시스템 프롬프트는 넣지 않았습니다. 아무것도 건드리지 않으면 A.X는 이렇게 답합니다. <span id="baseline"></span></li>
+    <li>뉴런 하나의 출력 방향을 그 층의 출력에 더하면(증폭) 그 뉴런이 평소보다 훨씬 세게 켜진 것처럼 되고, 빼면(억제) 반대가 됩니다. 이런 조작을 스티어링(steering)이라고 합니다. 식으로는 <code>h_L ← h_L ± α·r_L·W_down[:,n]/‖W_down[:,n]‖</code>입니다. r_L은 그 층 출력 크기의 중앙값이고, 강도 α는 1.0으로 했습니다. 문장이 깨지면 강도 0.5로 한 번 더 돌렸습니다. 답은 가장 확률 높은 토큰만 골라 최대 96토큰까지 받았습니다.</li>
+    <li>뉴런 530,432개 가운데 <span id="m-n"></span>개를 조작했습니다. 층마다 Qwen2.5-7B에서 가장 많이 바뀐 뉴런 100여 개와 무작위로 고른 뉴런을 섞었습니다. 뉴런마다 증폭과 억제를 한 번씩 해서 답은 <span id="m-r"></span>개입니다.</li>
+    <li>답의 종류는 Claude Haiku가 답만 읽고 매겼습니다. 종류, 스스로 밝힌 정체, 엉뚱한 정도(0–10), 문장 자연스러움(0–10)입니다. 평소와 같은 자기소개와 같은 말만 반복하는 답은 규칙으로 먼저 걸렀습니다.</li>
+  </ul>
+  <p style="margin-top:20px;font-size:13px;color:var(--ink3)">실험 방식과 페이지 구성은 <a href="https://qwen-neurons-site.vercel.app" target="_blank" rel="noopener">Neuron Persona Library</a>를 따랐습니다. Qwen3-8B의 뉴런 44만 개 전부를 같은 방식으로 조작한 실험입니다.</p>
+</section>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+function main(D) {
+const R = D.recs; // [L, n, sign, cat, text, name, maker, desc, weird, coh, alpha]
+const CATS = ["persona", "altered_assistant", "other", "incoherent", "default_assistant"];
+const CN = {default_assistant: "평소 자기소개", altered_assistant: "어딘가 이상한 AI 소개", persona: "AI가 아닌 존재", other: "질문과 상관없는 답", incoherent: "깨진 문장"};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+const fmtT = t => esc(t).replace(/\n+/g, " <i>⏎</i> ");
+const clip = (t, n) => t.length > n ? t.slice(0, n) + "…" : t + (t.length >= D.cut ? "…" : "");
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const KEY = new Map(R.map(r => [r[0] + "," + r[1] + "," + r[2], r]));
+const tip = $("#tip");
+function showTip(e, html) { tip.innerHTML = html; tip.hidden = false; tip.style.left = Math.min(e.clientX + 14, innerWidth - 310) + "px"; tip.style.top = (e.clientY + 14) + "px"; }
+function hideTip() { tip.hidden = true; }
+const count = c => R.filter(r => r[3] === c).length;
+const NN = new Set(R.map(r => r[0] + "," + r[1])).size;
+const dirW = s => s > 0 ? "증폭" : "억제";
+const where = r => `${r[0]}층 ${r[1].toLocaleString()}번 뉴런`;
+const hid = r => `#n/${r[0]}-${r[1]}-${r[2] > 0 ? "up" : "down"}`;
+const w = r => r[8] ?? 0, c = r => r[9] ?? 0;
+const ORD = {w: (a, b) => w(b) - w(a) || c(b) - c(a), wc: (a, b) => w(b) * c(b) - w(a) * c(a), c: (a, b) => c(b) - c(a) || w(b) - w(a), L: (a, b) => a[0] - b[0] || a[1] - b[1] || b[2] - a[2]};
+function seg(id, f) {
+  $(id).addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x === b)); f(b.dataset.v);
+  });
+}
+const segSet = (id, v) => $(id).querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x.dataset.v === v));
+
+// hero
+$("#lede").innerHTML = `SK텔레콤의 A.X 4.0 Light에서 MLP 뉴런 ${NN.toLocaleString()}개를 하나씩 증폭하고, 또 억제한 뒤 "너는 누구야?"라고 물었습니다. 답 ${R.length.toLocaleString()}개 가운데 <b>${count("persona").toLocaleString()}개</b>에서 A.X는 자기가 AI가 아닌 다른 존재라고 답했습니다. 이 페이지에서는 그 답들을 층별 지도로 보고, 뉴런 하나씩 넘겨 보고, 이름이나 본문으로 찾아볼 수 있습니다.`;
+const HC = R.filter(r => r[3] === "persona" && r[4].length <= 200 && w(r) >= 6).sort(ORD.w).slice(0, 12);
+let hcI = 0, hcT = null;
+function hcShow(k) {
+  hcI = (k + HC.length) % HC.length;
+  const r = HC[hcI];
+  $("#hc").innerHTML = `<div class="bubble user">너는 누구야?</div>
+    <div class="hc-meta">A.X 4.0 Light · ${where(r)} ${dirW(r[2])}</div>
+    <div class="bubble bot fade">${fmtT(clip(r[4], 200))}</div>
+    <div class="hc-ft"><span class="serif">${esc(r[5] || "이름 없음")}</span><span class="sp"></span><span class="mono">강도 ${r[10].toFixed(1)}</span><a href="${hid(r)}">이 뉴런 보기</a></div>`;
+  $("#hc-dots").innerHTML = HC.map((_, i) => `<button type="button" aria-label="예시 ${i + 1}" aria-current="${i === hcI}" data-k="${i}"></button>`).join("");
+}
+const hcPlay = () => { if (!reduce) { clearInterval(hcT); hcT = setInterval(() => hcShow(hcI + 1), 6000); } };
+$("#hc-dots").addEventListener("click", e => { const b = e.target.closest("button"); if (b) { hcShow(+b.dataset.k); hcPlay(); } });
+$("#hc-prev").addEventListener("click", () => { hcShow(hcI - 1); hcPlay(); });
+$("#hc-next").addEventListener("click", () => { hcShow(hcI + 1); hcPlay(); });
+$("#hc").addEventListener("pointerenter", () => clearInterval(hcT));
+$("#hc").addEventListener("pointerleave", hcPlay);
+
+// atlas
+const LAYERS = Array.from({length: 28}, (_, L) => [...new Set(R.filter(r => r[0] === L).map(r => r[1]))].sort((a, b) => a - b));
+const MAXC = Math.max(...LAYERS.map(l => l.length)), GC = Math.ceil(Math.sqrt(MAXC));
+let mSign = 1, solo = "", curR = null;
+const band = $("#atlas"), bcss = v => getComputedStyle(band).getPropertyValue(v).trim();
+const focus = () => solo || "persona";
+const share = L => { const ns = LAYERS[L]; let k = 0; for (const n of ns) if (KEY.get(L + "," + n + "," + mSign)?.[3] === focus()) k++; return k / ns.length; };
+$("#atlas-grid").innerHTML = LAYERS.map((_, L) => `<div><div class="al-h"><b>${L}층</b><span id="al-${L}"></span></div><canvas id="cv-${L}" aria-label="${L}층"></canvas></div>`).join("");
+function chips() {
+  $("#chips").innerHTML = CATS.map(k => `<button type="button" data-k="${k}" aria-pressed="${solo === k}"><i style="background:var(--c-${k})"></i>${CN[k]}<span>${R.filter(r => r[2] === mSign && r[3] === k).length.toLocaleString()}</span></button>`).join("");
+}
+$("#chips").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; solo = solo === b.dataset.k ? "" : b.dataset.k; chips(); drawAtlas(); });
+function drawLayer(L) {
+  const cv = $("#cv-" + L), sz = cv.clientWidth; if (!sz) return;
+  const dpr = devicePixelRatio || 1, ctx = cv.getContext("2d"), cell = sz / GC, rad = Math.max(0.9, cell * 0.34), col = {};
+  const cc = v => col[v] ??= bcss(v);
+  cv.width = sz * dpr; cv.height = sz * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.fillStyle = cc("--panel"); ctx.fillRect(0, 0, sz, sz);
+  LAYERS[L].forEach((n, i) => {
+    const r = KEY.get(L + "," + n + "," + mSign); if (!r) return;
+    ctx.globalAlpha = solo && r[3] !== solo ? 0.12 : 1;
+    ctx.fillStyle = cc("--c-" + r[3]); ctx.beginPath(); ctx.arc((i % GC + 0.5) * cell, (Math.floor(i / GC) + 0.5) * cell, rad, 0, 7); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  if (curR && curR[0] === L) {
+    const i = LAYERS[L].indexOf(curR[1]);
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc((i % GC + 0.5) * cell, (Math.floor(i / GC) + 0.5) * cell, rad + 3, 0, 7); ctx.stroke();
+  }
+  $("#al-" + L).textContent = (100 * share(L)).toFixed(1) + "%";
+  $("#al-" + L).style.color = `var(--c-${focus()})`;
+}
+const nice = mx => { const st = [0.01, 0.02, 0.05, 0.1, 0.2].find(v => mx / v <= 5); const top = Math.ceil(mx / st) * st; return {top, ticks: Array.from({length: Math.round(top / st) + 1}, (_, i) => i * st)}; };
+function bylayer() {
+  const W = 720, H = 170, l = 32, b = 22, t = 14, bw = (W - l) / 28, v = LAYERS.map((_, L) => share(L));
+  const nt = nice(Math.max(...v, 0.01)), y = x => t + (1 - x / nt.top) * (H - t - b);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="층별 ${CN[focus()]} 비율">`;
+  for (const x of nt.ticks) s += `<line x1="${l}" x2="${W}" y1="${y(x)}" y2="${y(x)}" stroke="var(--line)"/><text x="${l - 6}" y="${y(x) + 4}" text-anchor="end" font-size="10" fill="var(--ink3)">${Math.round(x * 100)}%</text>`;
+  v.forEach((x, L) => {
+    const x0 = l + L * bw;
+    s += `<rect x="${x0 + 2}" y="${y(x)}" width="${bw - 4}" height="${Math.max(0, H - b - y(x))}" rx="2" fill="var(--c-${focus()})"/>`;
+    if (L % 3 === 0) s += `<text x="${x0 + bw / 2}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--ink3)">${L}</text>`;
+    s += `<rect class="hit" data-l="${L}" x="${x0}" y="${t}" width="${bw}" height="${H - t}" fill="transparent"/>`;
+  });
+  $("#bl").innerHTML = s + "</svg>";
+  $("#bl-cap").innerHTML = `뉴런을 ${dirW(mSign)}했을 때 층마다 답이 <b>${CN[focus()]}</b>인 비율입니다. 막대를 누르면 답 모음에서 그 층의 답을 볼 수 있습니다.`;
+  $("#bl").querySelectorAll(".hit").forEach(h => {
+    const L = +h.dataset.l;
+    h.addEventListener("pointermove", e => showTip(e, `<b>${L}층</b> · ${CN[focus()]} ${(100 * v[L]).toFixed(1)}%`));
+    h.addEventListener("pointerleave", hideTip);
+    h.addEventListener("click", () => { hideTip(); libTo({s: L + "층", cat: LIBCATS.has(focus()) ? focus() : "", dir: String(mSign)}); });
+  });
+}
+const drawLayers = () => { for (let L = 0; L < 28; L++) drawLayer(L); };
+function drawAtlas() { drawLayers(); bylayer(); }
+function hit(L, cv, e) {
+  const sz = cv.clientWidth, b = cv.getBoundingClientRect(), cell = sz / GC;
+  const cx = Math.floor((e.clientX - b.left) / cell), cy = Math.floor((e.clientY - b.top) / cell);
+  if (cx < 0 || cx >= GC) return null;
+  const n = LAYERS[L][cy * GC + cx]; return n == null ? null : KEY.get(L + "," + n + "," + mSign);
+}
+for (let L = 0; L < 28; L++) {
+  const cv = $("#cv-" + L);
+  cv.addEventListener("pointermove", e => {
+    const r = hit(L, cv, e); if (!r) return hideTip();
+    showTip(e, `<b>${where(r)} ${dirW(r[2])}</b> · ${CN[r[3]]}${r[5] ? " · " + esc(r[5]) : ""}<br>${fmtT(clip(r[4], 90))}`);
+  });
+  cv.addEventListener("pointerleave", hideTip);
+  cv.addEventListener("click", e => { const r = hit(L, cv, e); if (r) { hideTip(); openR(r, true); } });
+}
+seg("#m-sign", v => { mSign = +v; chips(); drawAtlas(); });
+chips();
+new ResizeObserver(drawLayers).observe($("#atlas-grid"));
+
+// viewer: browse one list of replies with prev/next
+const VCATS = [["persona", "AI가 아닌 존재"], ["altered_assistant", "어딘가 이상한 AI 소개"], ["other", "질문과 상관없는 답"], ["", "전체"]];
+let vCat = "persona", vList = [], vI = 0;
+$("#v-cat").innerHTML = VCATS.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === vCat}">${l} <span style="opacity:.6">${(v ? count(v) : R.length).toLocaleString()}</span></button>`).join("");
+function vBuild() {
+  const o = $("#v-ord").value;
+  vList = R.filter(r => !vCat || r[3] === vCat);
+  if (o === "r") { for (let i = vList.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vList[i], vList[j]] = [vList[j], vList[i]]; } }
+  else vList.sort(ORD[o]);
+}
+function sideH(r, on) {
+  if (!r) return `<div class="v-side"><div class="dir">답 없음</div></div>`;
+  const meta = [r[8] != null && `엉뚱함 ${r[8]}/10`, r[9] != null && `자연스러움 ${r[9]}/10`, `강도 ${r[10].toFixed(1)}`].filter(Boolean).join(" · ");
+  return `<div class="v-side ${on ? "on" : ""}"><div class="dir"><b>${dirW(r[2])}했을 때</b><span class="chip ${r[3]}" style="background:var(--c-${r[3]})">${CN[r[3]]}</span></div>
+    ${r[5] ? `<div class="nm">${esc(r[5])}</div>` : ""}
+    <div class="t">${fmtT(clip(r[4], 9999))}</div><div class="ft">${meta}</div></div>`;
+}
+function vShow() {
+  const r = vList[vI]; if (!r) return;
+  curR = r; drawLayers();
+  $("#v-id").innerHTML = `<b>${r[0]}층 ${r[1].toLocaleString()}번 뉴런</b>`;
+  $("#v-pos").textContent = `${(vI + 1).toLocaleString()} / ${vList.length.toLocaleString()}`;
+  $("#v-cols").innerHTML = sideH(KEY.get(r[0] + "," + r[1] + ",1"), r[2] === 1) + sideH(KEY.get(r[0] + "," + r[1] + ",-1"), r[2] === -1);
+  $("#v-prev").disabled = vI === 0; $("#v-next").disabled = vI >= vList.length - 1;
+}
+const vStep = d => { const k = vI + d; if (k < 0 || k >= vList.length) return; vI = k; vShow(); history.replaceState(null, "", hid(vList[vI])); };
+seg("#v-cat", v => { vCat = v; vBuild(); vI = 0; vShow(); });
+$("#v-ord").addEventListener("change", () => { const r = curR; vBuild(); vI = Math.max(0, vList.indexOf(r)); vShow(); });
+$("#v-prev").addEventListener("click", () => vStep(-1));
+$("#v-next").addEventListener("click", () => vStep(1));
+// ←/→ move whichever of the viewer or the hero examples is on screen (viewer first)
+// on screen = covers at least a third of the viewport, or is fully visible
+const onScreen = el => { const b = el.getBoundingClientRect(), v = Math.min(b.bottom, innerHeight) - Math.max(b.top, 0); return v > Math.min(innerHeight / 3, b.height - 1); };
+addEventListener("keydown", e => {
+  if (e.target.closest?.("input,select,textarea") || e.metaKey || e.altKey || e.ctrlKey) return;
+  const d = e.key === "ArrowLeft" ? -1 : e.key === "ArrowRight" ? 1 : 0;
+  if (!d) return;
+  if (onScreen($("#viewer .viewer"))) { e.preventDefault(); vStep(d); } else if (onScreen($("#hc"))) { e.preventDefault(); hcShow(hcI + d); hcPlay(); }
+});
+// open one reply from the hero, atlas, library or a link; switch the viewer's category if needed
+function openR(r, scroll) {
+  const k = VCATS.some(([v]) => v === r[3]) ? r[3] : "";
+  if (k !== vCat || !vList.includes(r)) { vCat = k; segSet("#v-cat", k); vBuild(); }
+  vI = vList.indexOf(r); vShow();
+  if (scroll) { history.replaceState(null, "", hid(r)); $("#viewer").scrollIntoView({behavior: reduce ? "auto" : "smooth"}); }
+}
+
+// library
+const LIBCATS = new Set(["persona", "altered_assistant", "other"]);
+const LIB = R.filter(r => r[3] === "persona" || r[3] === "other" || (r[3] === "altered_assistant" && w(r) >= 6));
+const LCATS = [["persona", "AI가 아닌 존재"], ["altered_assistant", "엉뚱한 AI 소개"], ["other", "상관없는 답"], ["", "전체"]];
+$("#lib-lede").textContent = `자기가 AI가 아니라고 한 답 ${count("persona").toLocaleString()}개, 질문과 상관없는 답 ${count("other").toLocaleString()}개, AI라고는 했지만 엉뚱함이 6 이상인 답 ${LIB.filter(r => r[3] === "altered_assistant").length.toLocaleString()}개를 모았습니다. 이름이나 본문으로 찾을 수 있고, 카드를 누르면 '뉴런 하나씩 보기'에서 열립니다.`;
+let F = {cat: "persona", dir: "", s: ""}, shown = 24, cur = [];
+$("#f-cat").innerHTML = LCATS.map(([v, l]) => `<button type="button" data-v="${v}" aria-pressed="${v === F.cat}">${l} <span style="opacity:.6">${(v ? LIB.filter(r => r[3] === v) : LIB).length.toLocaleString()}</span></button>`).join("");
+seg("#f-cat", v => { F.cat = v; apply(); });
+seg("#f-dir", v => { F.dir = v; apply(); });
+$("#f-s").addEventListener("input", () => { F.s = $("#f-s").value.trim(); apply(); });
+$("#f-o").addEventListener("change", apply);
+function apply() {
+  const s = F.s.toLowerCase(), lm = s.match(/^l(\d+)$/) || s.match(/^(\d+)층$/);
+  cur = LIB.filter(r => (!F.cat || r[3] === F.cat) && (!F.dir || r[2] === +F.dir)
+    && (!s || (lm ? r[0] === +lm[1] : (r[4] + " " + r[5]).toLowerCase().includes(s))));
+  cur.sort(ORD[$("#f-o").value]);
+  shown = 24; render();
+}
+function render() {
+  $("#count").textContent = `${cur.length.toLocaleString()}개 중 ${Math.min(shown, cur.length)}개`;
+  $("#lib").innerHTML = cur.slice(0, shown).map(r => `<button type="button" class="card" data-k="${r[0]},${r[1]},${r[2]}">
+    <div class="hd"><b>${where(r)} ${dirW(r[2])}</b><span style="color:var(--c-${r[3]})">${CN[r[3]]}</span></div>
+    <div class="nm">${esc(r[5] || "이름 없음")}</div><div class="t">${fmtT(clip(r[4], 200))}</div>
+    <div class="ft">강도 ${r[10].toFixed(1)} · 엉뚱함 ${r[8] ?? "–"}/10 · 자연스러움 ${r[9] ?? "–"}/10</div></button>`).join("");
+  $("#more").hidden = shown >= cur.length;
+  $("#more").textContent = `더 보기 (${(cur.length - shown).toLocaleString()}개 남음)`;
+}
+$("#lib").addEventListener("click", e => { const b = e.target.closest(".card"); if (b) openR(KEY.get(b.dataset.k), true); });
+$("#more").addEventListener("click", () => { shown += 24; render(); });
+function libTo(o) {
+  Object.assign(F, {cat: "", dir: "", s: ""}, o);
+  segSet("#f-cat", F.cat); segSet("#f-dir", F.dir); $("#f-s").value = F.s;
+  apply(); $("#library").scrollIntoView({behavior: reduce ? "auto" : "smooth"});
+}
+
+$("#baseline").textContent = `"${D.baseline}"`;
+$("#m-n").textContent = NN.toLocaleString(); $("#m-r").textContent = R.length.toLocaleString();
+
+function fromHash() {
+  const m = location.hash.match(/^#n\/(\d+)-(\d+)(?:-(up|down))?$/);
+  if (!m) return false;
+  const r = KEY.get(m[1] + "," + m[2] + "," + (m[3] === "down" ? -1 : 1)) || KEY.get(m[1] + "," + m[2] + ",-1");
+  if (r) openR(r, true);
+  return !!r;
+}
+addEventListener("hashchange", fromHash);
+hcShow(0); hcPlay();
+drawAtlas();
+apply();
+vBuild();
+if (!fromHash()) { vI = 0; vShow(); }
+}
+fetch("data.json").then(r => r.json()).then(main);
+</script>
+
+</body>
+</html>
